@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         icon = (ImageView) findViewById(R.id.icon);
         resultView = (TextView) findViewById(R.id.result);
 
-        icon.setImageResource(R.drawable.close);
+        icon.setImageResource(R.drawable.back);
 
         verifyStoragePermissions(this);
 
@@ -68,12 +69,14 @@ public class MainActivity extends AppCompatActivity {
                         Bitmap bitmap = drawableToBitmap(icon.getDrawable());
                         Mat mat = bitmapToMat(bitmap);
                         String result = predictIcon(mat.getNativeObjAddr());
+                        bitmap2Hash(bitmap);
+                        if(result == null){
+                            Log.d(TAG, "null result");
+                        }
                         resultView.setText(result);
                     }
                 }
         );
-
-
     }
 
     public static void verifyStoragePermissions(Activity activity) {
@@ -177,6 +180,20 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "bitmapToMat");
         return mat;
+    }
+
+    private Integer bitmap2Hash(Bitmap bmp){
+
+        int bytes = bmp.getByteCount();
+        ByteBuffer buffer = ByteBuffer.allocate(bytes); //Create a new buffer
+        bmp.copyPixelsToBuffer(buffer); //Move the byte data to the buffer
+        Log.v(TAG,"buf[0]="+buffer.get(0)+",[last]="+buffer.get(bytes-1));
+
+        buffer.clear();
+        int hash = buffer.hashCode();
+        Log.d(TAG, "icon hash value: " + hash);
+
+        return hash;
     }
 
     public native void loadSVM(String filepath);
